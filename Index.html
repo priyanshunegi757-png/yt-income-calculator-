@@ -1,0 +1,544 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>YouTube Income Calculator (AI-ish) — Hinglish</title>
+  <meta name="description" content="Estimate YouTube earnings from views, niche, and country mix. Works for Long-form & Shorts. Built as a single-file, fast, SEO-friendly calculator." />
+  <meta name="keywords" content="YouTube income calculator, RPM, CPM, YouTube earnings, shorts revenue, long form" />
+  <meta property="og:title" content="YouTube Income Calculator (AI-ish)" />
+  <meta property="og:description" content="Estimate YouTube earnings from views, niche, and country mix. Long-form & Shorts supported." />
+  <meta property="og:type" content="website" />
+  <style>
+    :root{
+      --bg:#0b1020;--card:#121735;--muted:#8290c8;--text:#f5f8ff;--accent:#7c9cff;--good:#2ecc71;--warn:#ffcc00;--bad:#ff6b6b;--ring:#2b3470;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:radial-gradient(90vmax 90vmax at 120% -10%,#24306b 0%,#0b1020 50%) fixed;color:var(--text)}
+    a{color:var(--accent);text-decoration:none}
+    .wrap{max-width:1100px;margin:0 auto;padding:24px}
+    header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#8ab1ff,transparent),linear-gradient(225deg,#6b7cff,transparent);border:1px solid #3b4aa6;box-shadow:0 10px 30px rgba(124,156,255,.25) inset, 0 0 0 6px rgba(124,156,255,.07)}
+    h1{font-size:20px;margin:0;font-weight:800;letter-spacing:.3px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid var(--ring);border-radius:18px;padding:18px;box-shadow:0 8px 30px rgba(2,10,50,.25)}
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    .section-title{font-size:14px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:2px 0 12px}
+    label{display:block;font-size:13px;color:#cfd7ff;margin:12px 0 6px}
+    input[type="number"],select,textarea{width:100%;padding:12px 12px;border-radius:12px;border:1px solid #2a3466;background:#0f1430;color:var(--text);outline:none}
+    input[type="range"]{width:100%}
+    .row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+    .col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-3{grid-column:span 3}.col-8{grid-column:span 8}.col-12{grid-column:span 12}
+    .pill{display:inline-flex;gap:10px;align-items:center;padding:10px 12px;border-radius:999px;border:1px solid #2a3466;background:#0f1430}
+    .seg{display:flex;background:#0f1430;border:1px solid #2a3466;border-radius:12px;overflow:hidden}
+    .seg button{flex:1;padding:10px;border:0;background:transparent;color:#cfd7ff;cursor:pointer;font-weight:600}
+    .seg button[aria-pressed="true"]{background:#1a214d;color:#fff}
+    .muted{color:#a8b4f0;font-size:12px}
+    .mono{font-variant-numeric:tabular-nums; font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+    .kpi{display:flex;gap:16px;flex-wrap:wrap}
+    .kpi .box{flex:1 1 180px;background:#0f1430;border:1px dashed #33408a;border-radius:14px;padding:14px}
+    .kpi .val{font-size:22px;font-weight:800}
+    .hint{font-size:12px;color:#9fb0ff}
+    .table{width:100%;border-collapse:collapse}
+    .table th,.table td{padding:10px;border-bottom:1px dashed #2a3466;text-align:left}
+    .table th{color:#a8b4f0;font-weight:600;font-size:12px;letter-spacing:.5px;text-transform:uppercase}
+    .btn{cursor:pointer;border:1px solid #3a4aa6;background:#1a214d;color:#fff;border-radius:12px;padding:10px 14px;font-weight:700}
+    .btn.ghost{background:transparent}
+    .stack{display:flex;gap:10px;flex-wrap:wrap}
+    footer{margin:24px 0 8px;color:#8ea2ff;font-size:12px}
+    .badge{font-size:11px;padding:4px 8px;border-radius:999px;border:1px solid #2b3470;background:#111740;color:#a8b4f0}
+    .chip{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;background:#0f1430;border:1px solid #303b7a}
+    .danger{color:#ff9d9d}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand"><div class="logo"></div><div>
+        <h1>YouTube Income Calculator <span class="badge">Long‑form + Shorts</span></h1>
+        <div class="muted">Hinglish UI · Estimate only · No login</div>
+      </div></div>
+      <div class="stack">
+        <button class="btn ghost" id="shareBtn">Share/Save</button>
+        <button class="btn" id="resetBtn">Reset</button>
+      </div>
+    </header><div class="grid">
+  <section class="card">
+    <div class="section-title">Inputs (Aapka data)</div>
+    <div class="row">
+      <div class="col-6">
+        <label>Monthly Views (mahine ke views)</label>
+        <input type="number" id="views" min="0" step="1000" placeholder="e.g. 250000" value="250000" />
+      </div>
+      <div class="col-6">
+        <label>Content Type</label>
+        <div class="seg" role="tablist" aria-label="content type">
+          <button class="typeBtn" data-type="long" aria-pressed="true">Long‑form</button>
+          <button class="typeBtn" data-type="shorts" aria-pressed="false">Shorts</button>
+        </div>
+      </div>
+      <div class="col-6">
+        <label>Niche (topic)</label>
+        <select id="niche"></select>
+        <div class="hint">Har niche ka RPM multiplier alag hota hai (finance > tech > entertainment).</div>
+      </div>
+      <div class="col-6">
+        <label>Monetized Play Rate % (ads dikhe)</label>
+        <input type="number" id="mpr" min="0" max="100" step="1" value="55" />
+      </div>
+      <div class="col-6">
+        <label>Ad‑blocker / Premium impact % (ads se bache views)</label>
+        <input type="number" id="adblock" min="0" max="100" step="1" value="12" />
+      </div>
+      <div class="col-6">
+        <label>YouTube Premium % of views</label>
+        <input type="number" id="premiumPct" min="0" max="100" step="1" value="8" />
+      </div>
+    </div>
+
+    <div style="height:12px"></div>
+    <div class="section-title">Audience Country Mix (country wise %)</div>
+    <div class="row" id="countryRows"></div>
+    <div class="stack" style="margin-top:10px">
+      <button class="btn" id="addCountry">+ Add Country</button>
+      <span class="muted">Total should be ~100%. We'll normalize if needed.</span>
+    </div>
+  </section>
+
+  <aside class="card">
+    <div class="section-title">Estimate</div>
+    <div class="kpi">
+      <div class="box">
+        <div class="muted">Estimated Monthly Revenue</div>
+        <div class="val mono" id="revusd">$0</div>
+        <div class="muted" id="revinr">₹0</div>
+      </div>
+      <div class="box">
+        <div class="muted">Effective RPM (after all factors)</div>
+        <div class="val mono" id="rpm">$0.00</div>
+        <div class="muted">Per 1000 views</div>
+      </div>
+      <div class="box">
+        <div class="muted">Creator Revenue Share</div>
+        <div class="val mono" id="share">55%</div>
+        <div class="muted" id="typeNote">Long‑form default</div>
+      </div>
+    </div>
+
+    <div style="height:10px"></div>
+    <table class="table" id="breakdownTable">
+      <thead>
+        <tr>
+          <th>Country</th>
+          <th>Share %</th>
+          <th>Base RPM</th>
+          <th>Niche × RPM</th>
+          <th>Adj. RPM</th>
+          <th>Revenue</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="section-title">Advanced (optional)</div>
+    <div class="row">
+      <div class="col-6">
+        <label>Custom INR→USD rate</label>
+        <input type="number" id="fx" step="0.01" value="84.0" />
+      </div>
+      <div class="col-6">
+        <label>Custom RPM override ($)</label>
+        <input type="number" id="rpmOverride" step="0.01" placeholder="leave blank" />
+      </div>
+      <div class="col-12">
+        <label>Notes (will be saved in share link)</label>
+        <textarea id="notes" rows="2" placeholder="Channel details, assumptions, etc."></textarea>
+      </div>
+    </div>
+    <div style="height:10px"></div>
+    <div class="stack">
+      <button class="btn" id="copyBtn">Copy Summary</button>
+      <button class="btn ghost" id="csvBtn">Download CSV</button>
+    </div>
+  </aside>
+</div>
+
+<footer>
+  <div>⚠️ This tool provides rough estimates. Real RPM/CPM varies by season, music usage, mid‑rolls, and inventory.</div>
+  <div style="margin-top:6px">Made with ❤. You can self‑host this single file. UI: dark, fast, responsive.</div>
+</footer>
+
+  </div><script>
+// --- Data (rough heuristics) --- //
+const COUNTRY_RPM_BASE = {
+  "United States": 4.2,
+  "Canada": 3.6,
+  "United Kingdom": 3.8,
+  "Australia": 4.0,
+  "Germany": 2.8,
+  "France": 2.4,
+  "UAE": 2.6,
+  "Saudi Arabia": 2.4,
+  "Brazil": 1.1,
+  "Mexico": 1.2,
+  "India": 0.65,
+  "Pakistan": 0.45,
+  "Bangladesh": 0.4,
+  "Indonesia": 0.75,
+  "Philippines": 0.8,
+  "Vietnam": 0.9,
+  "South Africa": 1.3,
+  "Nigeria": 0.5,
+  "Egypt": 0.55,
+  "Turkey": 1.2,
+  "Japan": 2.0,
+  "South Korea": 2.2,
+  "Italy": 2.0,
+  "Spain": 1.8,
+  "Netherlands": 2.6,
+  "Sweden": 2.8,
+  "Poland": 1.4,
+  "Argentina": 1.0,
+  "Chile": 1.2,
+  "Other": 0.9
+};
+
+const NICHES = [
+  { id:"finance", name:"Finance / Investing", mul:1.9 },
+  { id:"business", name:"Business / SaaS / Marketing", mul:1.6 },
+  { id:"tech", name:"Tech / Programming", mul:1.4 },
+  { id:"education", name:"Education / Study", mul:1.25 },
+  { id:"health", name:"Health / Fitness", mul:1.2 },
+  { id:"gaming", name:"Gaming", mul:0.9 },
+  { id:"vlog", name:"Vlogs / Entertainment", mul:0.85 },
+  { id:"music", name:"Music / Dance", mul:0.7 },
+  { id:"kids", name:"Kids", mul:0.8 }
+];
+
+const DEFAULT_COUNTRIES = [
+  { country:"India", share:55 },
+  { country:"United States", share:20 },
+  { country:"United Kingdom", share:5 },
+  { country:"Other", share:20 }
+];
+
+// --- State --- //
+const el = (q)=>document.querySelector(q);
+const els = (q)=>Array.from(document.querySelectorAll(q));
+
+function num(v, fallback=0){
+  const n = parseFloat(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function fmtUSD(n){
+  return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n);
+}
+function fmtUSD2(n){
+  return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2}).format(n);
+}
+function fmtINR(n){
+  return new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(n);
+}
+
+function populateNiche(){
+  const sel = el('#niche');
+  sel.innerHTML = NICHES.map(n=>`<option value="${n.id}">${n.name} (×${n.mul})</option>`).join('');
+  sel.value='tech';
+}
+
+function makeCountryRow(country, share){
+  const id = Math.random().toString(36).slice(2,7);
+  const opts = Object.keys(COUNTRY_RPM_BASE).map(c=>`<option ${c===country?'selected':''}>${c}</option>`).join('');
+  return `<div class="col-6 card" data-row="${id}">
+    <div class="row">
+      <div class="col-8">
+        <label>Country</label>
+        <select class="countrySel">${opts}</select>
+      </div>
+      <div class="col-4">
+        <label>Share %</label>
+        <input type="number" class="countryShare" min="0" max="100" step="1" value="${share}" />
+      </div>
+      <div class="col-12" style="display:flex;justify-content:space-between;align-items:center">
+        <span class="muted">Base RPM: $<span class="mono base">0.00</span></span>
+        <button class="btn ghost delBtn">Remove</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderCountries(rows){
+  const wrap = el('#countryRows');
+  wrap.innerHTML = rows.map(r=>makeCountryRow(r.country,r.share)).join('');
+}
+
+function currentShareRows(){
+  return els('#countryRows [data-row]').map(node=>({
+    node,
+    country: node.querySelector('.countrySel').value,
+    share: num(node.querySelector('.countryShare').value)
+  }));
+}
+
+function getNicheMul(){
+  const id = el('#niche').value;
+  return NICHES.find(n=>n.id===id)?.mul || 1;
+}
+
+function getCreatorShare(type){
+  // Rough policy heuristic: Long‑form ~55% to creators, Shorts ~45% (after music pool etc.).
+  return type==='shorts' ? 45 : 55;
+}
+
+function calc(){
+  const views = num(el('#views').value);
+  const type = els('.typeBtn').find(b=>b.getAttribute('aria-pressed')==='true').dataset.type;
+  const mpr = num(el('#mpr').value)/100; // monetized play rate
+  const adblock = num(el('#adblock').value)/100; // adblock/premium impact reducing ad‑served
+  const premiumPct = num(el('#premiumPct').value)/100; // share of views that are YT Premium
+  const nicheMul = getNicheMul();
+  const sharePct = getCreatorShare(type);
+  const fx = num(el('#fx').value) || 84.0;
+  const rpmOverride = el('#rpmOverride').value.trim();
+
+  // Country rows
+  const rows = currentShareRows();
+  let totalShare = rows.reduce((a,r)=>a+r.share,0) || 0;
+  if(totalShare <= 0){ totalShare=1; }
+
+  // Normalize shares to 1.0
+  rows.forEach(r=> r.w = r.share/totalShare);
+
+  // Base blended RPM before platform & other factors
+  const tableBody = el('#breakdownTable tbody');
+  tableBody.innerHTML = '';
+
+  let blended = 0;
+  for(const r of rows){
+    const base = COUNTRY_RPM_BASE[r.country] || 1.0;
+    const nicheAdj = base * nicheMul;
+    blended += r.w * nicheAdj;
+    // temporary fill; actual adj after factors set below
+    r._base = base; r._nicheAdj = nicheAdj;
+  }
+
+  // Effective ad‑served rate
+  const servedFactor = Math.max(0, (mpr * (1 - adblock)) );
+
+  // Premium earnings heuristic: Premium per 1000 premium views
+  // Premium pool varies a lot; assume ~$1.2 RPM equivalent net to creators long‑term (very rough).
+  const premiumRPM = 1.2; // usd per 1000 premium views (already net-ish)
+
+  // Apply creator revenue share & content type nuances into RPM
+  let effectiveRPM = blended; // $ per 1000 plain
+  effectiveRPM *= (sharePct/100); // creator cut
+  effectiveRPM *= servedFactor;   // only monetized plays serve ads
+
+  // Add premium component
+  const premViews = views * premiumPct;
+  const premRev = (premViews/1000) * (premiumRPM * (type==='shorts'?0.85:1)); // slightly lower for shorts
+
+  // Override if user set a custom RPM
+  if(rpmOverride){
+    effectiveRPM = num(rpmOverride);
+  }
+
+  // Revenue
+  const adRev = (views/1000) * Math.max(0,effectiveRPM);
+  const totalRevUSD = Math.max(0, adRev + premRev);
+
+  // Fill table with per‑country breakdown (ad part only)
+  for(const r of rows){
+    // recompute each row's contribution
+    const rowAdjRPM = r._nicheAdj * (sharePct/100) * servedFactor;
+    const rowRev = (views/1000) * (r.w * rowAdjRPM);
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r.country}</td>
+      <td class="mono">${(r.share).toFixed(1)}%</td>
+      <td class="mono">${fmtUSD2(r._base)}</td>
+      <td class="mono">${fmtUSD2(r._nicheAdj)}</td>
+      <td class="mono">${fmtUSD2(rowAdjRPM)}</td>
+      <td class="mono">${fmtUSD2(rowRev)}</td>`;
+    tableBody.appendChild(tr);
+  }
+
+  el('#revusd').textContent = fmtUSD(totalRevUSD);
+  el('#revinr').textContent = `${fmtINR(totalRevUSD * fx)}`;
+  el('#rpm').textContent = fmtUSD2(Math.max(0,effectiveRPM));
+  el('#share').textContent = sharePct+"%";
+  el('#typeNote').textContent = type==='shorts' ? 'Shorts estimate' : 'Long‑form default';
+
+  return {views,type,mpr,adblock,premiumPct,nicheId:el('#niche').value,rows,sharePct,fx,rpmOverride,notes:el('#notes').value,totalRevUSD,effectiveRPM,premRev};
+}
+
+function rerenderBaseLabels(){
+  els('#countryRows [data-row]').forEach(node=>{
+    const c = node.querySelector('.countrySel').value;
+    const base = COUNTRY_RPM_BASE[c] || 1.0;
+    node.querySelector('.base').textContent = base.toFixed(2);
+  });
+}
+
+function addCountryRow(country="India", share=10){
+  const wrap = el('#countryRows');
+  wrap.insertAdjacentHTML('beforeend', makeCountryRow(country, share));
+  rerenderBaseLabels();
+  bindDynamicRowEvents();
+  calc();
+}
+
+function bindDynamicRowEvents(){
+  els('.countrySel,.countryShare').forEach(inp=> inp.oninput = ()=>calc());
+  els('.delBtn').forEach(btn=> btn.onclick = (e)=>{ e.target.closest('[data-row]').remove(); calc(); });
+}
+
+function bindStaticEvents(){
+  el('#views').oninput = calc;
+  el('#mpr').oninput = calc;
+  el('#adblock').oninput = calc;
+  el('#premiumPct').oninput = calc;
+  el('#niche').onchange = calc;
+  el('#fx').oninput = calc;
+  el('#rpmOverride').oninput = calc;
+  el('#notes').oninput = ()=> debounceShareUrl();
+
+  els('.typeBtn').forEach(b=>{
+    b.onclick = ()=>{
+      els('.typeBtn').forEach(x=>x.setAttribute('aria-pressed','false'));
+      b.setAttribute('aria-pressed','true');
+      calc();
+    };
+  });
+
+  el('#addCountry').onclick = ()=> addCountryRow();
+  el('#resetBtn').onclick = ()=>{ location.href = location.pathname; };
+  el('#copyBtn').onclick = copySummary;
+  el('#csvBtn').onclick = downloadCSV;
+  el('#shareBtn').onclick = ()=>{ navigator.clipboard.writeText(location.href).then(()=> alert('Link copied!')); };
+}
+
+function stateToParams(state){
+  const p = new URLSearchParams();
+  p.set('v', state.views);
+  p.set('t', state.type);
+  p.set('n', state.nicheId);
+  p.set('mpr', Math.round(state.mpr*100));
+  p.set('ab', Math.round(state.adblock*100));
+  p.set('pr', Math.round(state.premiumPct*100));
+  p.set('fx', state.fx);
+  if(state.rpmOverride) p.set('rpm', state.rpmOverride);
+  if(state.notes) p.set('notes', encodeURIComponent(state.notes));
+  // countries
+  const c = state.rows.map(r=>`${encodeURIComponent(r.country)}:${Math.round(r.share*10)/10}`).join('|');
+  p.set('cmix', c);
+  return p.toString();
+}
+
+let shareTimer;
+function debounceShareUrl(){
+  clearTimeout(shareTimer);
+  shareTimer = setTimeout(()=>{
+    const s = calc();
+    const qs = stateToParams(s);
+    history.replaceState(null,'', `${location.pathname}?${qs}`);
+  }, 400);
+}
+
+function copySummary(){
+  const s = calc();
+  const lines = [];
+  lines.push(`YouTube Income Estimate (Monthly)`);
+  lines.push(`Views: ${s.views.toLocaleString()} | Type: ${s.type} | Niche: ${s.nicheId}`);
+  lines.push(`Effective RPM: ${fmtUSD2(s.effectiveRPM)} | Revenue: ${fmtUSD(s.totalRevUSD)}`);
+  lines.push(`Premium add-on: ${fmtUSD2(s.premRev)}`);
+  lines.push(`Country mix:`);
+  s.rows.forEach(r=>{ lines.push(`  - ${r.country}: ${r.share.toFixed(1)}% (base $${r._base.toFixed(2)} × niche ${getNicheMul()})`); });
+  if(s.notes) lines.push(`Notes: ${s.notes}`);
+  navigator.clipboard.writeText(lines.join('\n')).then(()=>{
+    alert('Summary copied to clipboard!');
+  });
+}
+
+function downloadCSV(){
+  const s = calc();
+  const rows = [
+    ['Metric','Value'],
+    ['Views', s.views],
+    ['Type', s.type],
+    ['Niche', s.nicheId],
+    ['Effective RPM', s.effectiveRPM.toFixed(2)],
+    ['Premium Revenue (USD)', s.premRev.toFixed(2)],
+    ['Total Revenue (USD)', s.totalRevUSD.toFixed(2)],
+    [],
+    ['Country','Share %','Base RPM','Niche×RPM','Adj RPM','Revenue USD']
+  ];
+  const tbody = document.querySelectorAll('#breakdownTable tbody tr');
+  tbody.forEach(tr=>{
+    const tds = tr.querySelectorAll('td');
+    rows.push([tds[0].textContent, tds[1].textContent.replace('%',''), tds[2].textContent.replace('$',''), tds[3].textContent.replace('$',''), tds[4].textContent.replace('$',''), tds[5].textContent.replace('$','')]);
+  });
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'youtube-income-estimate.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function paramsToState(){
+  const p = new URLSearchParams(location.search);
+  if(!p.has('v')) return null;
+  return {
+    views: num(p.get('v')),
+    type: p.get('t')||'long',
+    nicheId: p.get('n')||'tech',
+    mpr: num(p.get('mpr'))/100,
+    adblock: num(p.get('ab'))/100,
+    premiumPct: num(p.get('pr'))/100,
+    fx: num(p.get('fx'))||84,
+    rpmOverride: p.get('rpm')||'',
+    notes: decodeURIComponent(p.get('notes')||''),
+    cmix: p.get('cmix')||''
+  };
+}
+
+function hydrateFromParams(st){
+  el('#views').value = st.views;
+  els('.typeBtn').forEach(x=>x.setAttribute('aria-pressed', x.dataset.type===st.type ? 'true':'false'));
+  el('#niche').value = st.nicheId;
+  el('#mpr').value = Math.round(st.mpr*100);
+  el('#adblock').value = Math.round(st.adblock*100);
+  el('#premiumPct').value = Math.round(st.premiumPct*100);
+  el('#fx').value = st.fx;
+  el('#rpmOverride').value = st.rpmOverride;
+  el('#notes').value = st.notes;
+
+  // countries
+  const rows=[];
+  if(st.cmix){
+    st.cmix.split('|').forEach(pair=>{
+      const [c, s] = pair.split(':');
+      rows.push({country: decodeURIComponent(c), share: num(s)});
+    });
+  }
+  if(rows.length){ renderCountries(rows); bindDynamicRowEvents(); rerenderBaseLabels(); }
+}
+
+// --- Init --- //
+(function init(){
+  populateNiche();
+  renderCountries(DEFAULT_COUNTRIES);
+  bindStaticEvents();
+  bindDynamicRowEvents();
+  rerenderBaseLabels();
+
+  const st = paramsToState();
+  if(st){ hydrateFromParams(st); }
+
+  calc();
+})();
+</script></body>
+</html>
